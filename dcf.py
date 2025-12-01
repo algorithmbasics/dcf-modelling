@@ -83,7 +83,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 LOGGING_OUTPUT = None # None or logger
 
-
+#----------------------------------------------------------------------------------------------------------
+# STEP 1: IMPORT DATA FROM GOOGLE SHEET
+# STEP 2: Keep only data within historical window
+#         window: HISTORY_START_YEAR, HISTORY_END_YEAR
+# STEP 3: convert relevant columns to numpy arrays: dfcol2numpy()
+# STEP 4: check constructed variables
+# STEP 5: compute margin arrays using array_arithmetic()
+# STEP 6: projections using extend_array()
+# STEP 7: fill up forecasted values using apply_growth()
+# STEP 8: construct FCF
+# STEP 9: Present value calculations
+# STEP 10: Enterprise value
+# STEP 11: Equity value
+# STEP 12: Decision
+#----------------------------------------------------------------------------------------------------------
 
 # STEP 1: IMPORT DATA FROM GOOGLE SHEET
 
@@ -98,7 +112,7 @@ if dcf_df is None:
 logger.info(f"⚙️ DCF DataFrame columns: {dcf_df.columns.tolist()}")
 logger.info(f"⚙️ DCF DataFrame preview:\n{dcf_df}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <1>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 
@@ -136,7 +150,7 @@ logger.info(f"ℹ️ Sales growth column added: {dcf_actuals.shape}")
 logger.info("✅ DCF data loaded.")
 logger.info(f"ℹ️ DCF DataFrame preview:\n{dcf_actuals[["formatted_date", "year", SALES_VAR, "sales_growth"]]}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <2>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 
@@ -150,6 +164,9 @@ if sales_arr is None:
     sys.exit()
 
 logger.info(f"📊 Sales numpy array: {sales_arr}")
+
+# sys.exit()  # STOP <3>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+
 
 # sales growth array
 sales_growth_arr: Optional[np.ndarray] = dfcol2numpy(varname="sales_growth", df=dcf_actuals, logger=LOGGING_OUTPUT)
@@ -257,7 +274,7 @@ shares_out_arr: Optional[np.ndarray] = dfcol2numpy(
     varname=N_SHARES_OUTSTANDING, df=dcf_actuals, logger=LOGGING_OUTPUT)
 
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <4>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 
@@ -330,7 +347,7 @@ if calculated_depreciation_arr is None:
 check_depreciation_arr: np.ndarray = np.allclose(depreciation_arr, calculated_depreciation_arr, rtol=1e-5, atol=1e-5)
 logger.info(f"⚙️ CHECK PASSED? Depreciation same as Calculated Depreciation: {check_depreciation_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <5>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 
@@ -430,7 +447,7 @@ if working_capital_margin_arr is None:
 
 logger.info(f"📊 WORKING CAPITAL margin numpy array: {working_capital_margin_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <6>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 
@@ -439,8 +456,12 @@ logger.info(f"📊 WORKING CAPITAL margin numpy array: {working_capital_margin_a
 
 # sales growth projections
 sales_growth_arr_extended: Optional[np.ndarray] = extend_array(
-    arr=sales_growth_arr, forecast_periods=N_FORECAST_YEARS, method=None, STEP=None,
-    START_VALUE=float(np.nanmean(sales_growth_arr)), END_VALUE=TERMINAL_GROWTH_RATE,
+    arr=sales_growth_arr, 
+    forecast_periods=N_FORECAST_YEARS, 
+    method=None, 
+    STEP=None,
+    START_VALUE=float(np.nanmean(sales_growth_arr)), 
+    END_VALUE=TERMINAL_GROWTH_RATE,
     logger=LOGGING_OUTPUT
 )
 if sales_growth_arr_extended is None:
@@ -449,12 +470,15 @@ if sales_growth_arr_extended is None:
 
 logger.info(f"📊 Extended sales growth numpy array: {sales_growth_arr_extended}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <7>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # cogs margin projections
 cogs_margin_arr_extended: Optional[np.ndarray] = extend_array(
-    arr=cogs_margin_arr, forecast_periods=N_FORECAST_YEARS, method=None, STEP=None,
+    arr=cogs_margin_arr, 
+    forecast_periods=N_FORECAST_YEARS, 
+    method=None, 
+    STEP=None,
     # Default assumption: start from current historical average
     START_VALUE=float(np.nanmean(cogs_margin_arr)), 
     # Default assumption: maintain your advantage (or approach terminal rate if higher)
@@ -467,12 +491,15 @@ if cogs_margin_arr_extended is None:
 
 logger.info(f"📊 Extended COGS margin numpy array: {cogs_margin_arr_extended}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <8>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # other operating income margin projections
 other_oper_inc_margin_arr_extended: Optional[np.ndarray] = extend_array(
-    arr=other_oper_inc_margin_arr, forecast_periods=N_FORECAST_YEARS, method=None, STEP=None,
+    arr=other_oper_inc_margin_arr, 
+    forecast_periods=N_FORECAST_YEARS, 
+    method=None, 
+    STEP=None,
     # Default assumption: start from last value
     START_VALUE=float(other_oper_inc_margin_arr[-1]),
     # Default assumption: goes to ZERO in the long term
@@ -485,12 +512,15 @@ if other_oper_inc_margin_arr_extended is None:
 
 logger.info(f"📊 Extended Other Operating Income margin numpy array: {other_oper_inc_margin_arr_extended}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <9>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # SG&A margin projections
 sga_margin_arr_extended: Optional[np.ndarray] = extend_array(
-    arr=sga_margin_arr, forecast_periods=N_FORECAST_YEARS, method=None, STEP=None,
+    arr=sga_margin_arr, 
+    forecast_periods=N_FORECAST_YEARS, 
+    method=None, 
+    STEP=None,
     # Default assumption: start from last value
     START_VALUE=float(sga_margin_arr[-1]), 
     # Default assumption: maintain your advantage (or approach terminal rate if higher)
@@ -503,12 +533,15 @@ if sga_margin_arr_extended is None:
 
 logger.info(f"📊 Extended SG&A margin numpy array: {sga_margin_arr_extended}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <10>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # R&D margin projections
 rd_margin_arr_extended: Optional[np.ndarray] = extend_array(
-    arr=rd_margin_arr, forecast_periods=N_FORECAST_YEARS, method=None, STEP=None,
+    arr=rd_margin_arr, 
+    forecast_periods=N_FORECAST_YEARS, 
+    method=None, 
+    STEP=None,
     # Default assumption: start from last value
     START_VALUE=float(rd_margin_arr[-1]), 
     # Default assumption: maintain your advantage (or approach terminal rate if lower)
@@ -521,12 +554,15 @@ if rd_margin_arr_extended is None:
 
 logger.info(f"📊 Extended R&D margin numpy array: {rd_margin_arr_extended}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <11>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # other operating expense margin projections
 other_oper_exp_margin_arr_extended: Optional[np.ndarray] = extend_array(
-    arr=other_oper_exp_margin_arr, forecast_periods=N_FORECAST_YEARS, method=None, STEP=None,
+    arr=other_oper_exp_margin_arr, 
+    forecast_periods=N_FORECAST_YEARS, 
+    method=None, 
+    STEP=None,
     # Default assumption: start from last value
     START_VALUE=float(other_oper_exp_margin_arr[-1]),
     # Default assumption: goes to ZERO in the long term
@@ -539,12 +575,15 @@ if other_oper_exp_margin_arr_extended is None:
 
 logger.info(f"📊 Extended Other Operating Expense margin numpy array: {other_oper_exp_margin_arr_extended}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <12>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # effective tax rate projections
 effective_tax_rate_arr_extended: Optional[np.ndarray] = extend_array(
-    arr=calculated_effective_tax_rate_arr, forecast_periods=N_FORECAST_YEARS, method=None, STEP=None,
+    arr=calculated_effective_tax_rate_arr, 
+    forecast_periods=N_FORECAST_YEARS, 
+    method=None, 
+    STEP=None,
     # Default assumption: start from last value
     START_VALUE=float(calculated_effective_tax_rate_arr[-1]),
     # Default assumption: and stay there
@@ -557,12 +596,15 @@ if effective_tax_rate_arr_extended is None:
 
 logger.info(f"📊 Extended Effective Tax Rate numpy array: {effective_tax_rate_arr_extended}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <13>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # capex margin projections
 capex_margin_arr_extended: Optional[np.ndarray] = extend_array(
-    arr=capex_margin_arr, forecast_periods=N_FORECAST_YEARS, method=None, STEP=None,
+    arr=capex_margin_arr, 
+    forecast_periods=N_FORECAST_YEARS, 
+    method=None, 
+    STEP=None,
     # Default assumption: start from historical average
     START_VALUE=float(np.nanmean(capex_margin_arr)),
     # Default assumption: and stay there (for maintenance capex)
@@ -575,12 +617,15 @@ if capex_margin_arr_extended is None:
 
 logger.info(f"📊 Extended Capex Margin numpy array: {capex_margin_arr_extended}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <14>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # Depreciation-to-capex projections
 depr_capex_arr_extended: Optional[np.ndarray] = extend_array(
-    arr=depr_capex_arr, forecast_periods=N_FORECAST_YEARS, method=None, STEP=None,
+    arr=depr_capex_arr, 
+    forecast_periods=N_FORECAST_YEARS, 
+    method=None, 
+    STEP=None,
     # Default assumption: start from last value
     START_VALUE=float(depr_capex_arr[-1]),
     # Default assumption: and get to TERMINAL_DEPR_TO_CAPEX_RATE=1.0 in the long term
@@ -593,12 +638,15 @@ if depr_capex_arr_extended is None:
 
 logger.info(f"📊 Extended Depreciation-to-Capex numpy array: {depr_capex_arr_extended}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <15>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # amortization margin projections
 amortization_margin_arr_extended: Optional[np.ndarray] = extend_array(
-    arr=amortization_margin_arr, forecast_periods=N_FORECAST_YEARS, method=None, STEP=None,
+    arr=amortization_margin_arr, 
+    forecast_periods=N_FORECAST_YEARS, 
+    method=None, 
+    STEP=None,
     # Default assumption: start from historical average
     START_VALUE=float(np.nanmean(amortization_margin_arr)),
     # Default assumption: stay there
@@ -611,12 +659,15 @@ if amortization_margin_arr_extended is None:
 
 logger.info(f"📊 Extended Amortization Margin numpy array: {amortization_margin_arr_extended}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <16>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # working capital margin projections
 working_capital_margin_arr_extended: Optional[np.ndarray] = extend_array(
-    arr=working_capital_margin_arr, forecast_periods=N_FORECAST_YEARS, method=None, STEP=None,
+    arr=working_capital_margin_arr, 
+    forecast_periods=N_FORECAST_YEARS, 
+    method=None, 
+    STEP=None,
     # Default assumption: start from historical average
     START_VALUE=float(np.nanmean(working_capital_margin_arr)),
     # Default assumption: stay there
@@ -629,7 +680,7 @@ if working_capital_margin_arr_extended is None:
 
 logger.info(f"📊 Extended Working Capital Margin numpy array: {working_capital_margin_arr_extended}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <17>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 
@@ -648,7 +699,7 @@ if sales_forecast_arr is None:
 
 logger.info(f"📊 Sales forecast numpy array: {sales_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <18>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # cogs forecast projections
@@ -660,7 +711,7 @@ if cogs_forecast_arr is None:
 
 logger.info(f"📊 COGS forecast numpy array: {cogs_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <19>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # gross profit forecast projections
@@ -672,7 +723,7 @@ if gross_profit_forecast_arr is None:
 
 logger.info(f"📊 Gross profit forecast numpy array: {gross_profit_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <20>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # other operating income forecast projections
@@ -684,7 +735,7 @@ if other_oper_inc_forecast_arr is None:
 
 logger.info(f"📊 Other Operating Income forecast numpy array: {other_oper_inc_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <21>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # SG&A forecast projections
@@ -696,7 +747,7 @@ if sga_forecast_arr is None:
 
 logger.info(f"📊 SG&A forecast numpy array: {sga_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <22>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # R&D forecast projections
@@ -708,7 +759,7 @@ if rd_forecast_arr is None:
 
 logger.info(f"📊 R&D forecast numpy array: {rd_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <23>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # other operating expense forecast projections
@@ -720,7 +771,7 @@ if other_oper_exp_forecast_arr is None:
 
 logger.info(f"📊 Other Operating Expense forecast numpy array: {other_oper_exp_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <24>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # operating expense forecast projections
@@ -738,7 +789,7 @@ if oper_exp_forecast_arr is None:
 
 logger.info(f"📊 Operating Expense forecast numpy array: {oper_exp_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <25>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # EBIT forecast projections
@@ -761,7 +812,7 @@ if ebit_forecast_arr is None:
 
 logger.info(f"📊 EBIT forecast numpy array: {ebit_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <26>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # NOPAT forecast projections
@@ -779,7 +830,7 @@ if nopat_forecast_arr is None:
 
 logger.info(f"📊 NOPAT forecast numpy array: {nopat_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <27>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # capital expenditure forecast projections
@@ -797,7 +848,7 @@ if capex_forecast_arr is None:
 
 logger.info(f"📊 Capex forecast numpy array: {capex_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <28>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # depreciation forecast projections
@@ -815,7 +866,7 @@ if depreciation_forecast_arr is None:
 
 logger.info(f"📊 Depreciation forecast numpy array: {depreciation_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <29>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # amortization forecast projections
@@ -833,7 +884,7 @@ if amortization_forecast_arr is None:
 
 logger.info(f"📊 Amortization forecast numpy array: {amortization_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <30>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # working capital forecast projections
@@ -851,7 +902,7 @@ if working_capital_forecast_arr is None:
 
 logger.info(f"📊 Working Capital forecast numpy array: {working_capital_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <31>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # compute change in working capital forecast projections
@@ -864,7 +915,7 @@ if change_in_working_capital_forecast_arr is None:
 
 logger.info(f"📊 Change in Working Capital forecast numpy array: {change_in_working_capital_forecast_arr}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <32>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
 
 # STEP 8: construct FCF
@@ -913,6 +964,9 @@ logger.info(f"[RESULT] FCF forecast numpy array: {fcf_forecast_arr}")
 fcf_forecast_arr: np.ndarray = fcf_forecast_arr[N_HISTORICAL_YEARS-1:]
 logger.info(f"[RESULT] FCF forecast numpy array (current & projected years only): {fcf_forecast_arr}")
 
+# sys.exit()  # STOP <33>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+
+
 # wacc array
 wacc_constant_arr: np.ndarray = np.full(N_FORECAST_YEARS, WACC)
 # logger.info(f"{wacc_constant_arr=}")
@@ -920,7 +974,10 @@ wacc_constant_arr: np.ndarray = np.full(N_FORECAST_YEARS, WACC)
 wacc_arr = apply_growth(initial_value=1.0, growth_rates=wacc_constant_arr, logger=LOGGING_OUTPUT)
 # logger.info(f"{wacc_arr=}")
 
+# sys.exit()  # STOP <34>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
 
+
+# STEP 9: Present value calculations
 
 # present value of forecasted FCF
 pv_forecasted_fcf_arr: Optional[np.ndarray] = (
@@ -937,21 +994,34 @@ if pv_forecasted_fcf_arr is None:
 
 logger.info(f"📊 PV FCF forecast numpy array: {pv_forecasted_fcf_arr}")
 
+
 # PV FCF forecast
 pv_forecasted_fcf_sum: float = float(pv_forecasted_fcf_arr.sum())
 logger.info(f"📊 PV FCF forecast: {pv_forecasted_fcf_sum}")
 
+# sys.exit()  # STOP <35>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+
+
+
 # PV Terminal Value
 # Terminal Value = Last FCF * (1 + g)/(wacc - g)
 terminal_value: float = float(
-    ((fcf_forecast_arr[-1])*(1+TERMINAL_GROWTH_RATE))/(WACC - TERMINAL_GROWTH_RATE))
+    ((fcf_forecast_arr[-1])*(1+TERMINAL_GROWTH_RATE))/(WACC-TERMINAL_GROWTH_RATE))
 # Discount Terminal Value to present term
 pv_terminal_value: float = float(terminal_value/((1+WACC)**N_FORECAST_YEARS))
 logger.info(f"📊 PV Terminal Value: {pv_terminal_value}")
 
+
+# STEP 10: Enterprise value
+
 # Enterprise Value
 enterprise_value = pv_forecasted_fcf_sum+pv_terminal_value
 logger.info(f"📊 Enterprise Value: {enterprise_value}")
+
+# sys.exit()  # STOP <36>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+
+
+# STEP 11: Equity value
 
 # Equity Value = Enterprise Value
 #                – Total Debt
@@ -971,9 +1041,15 @@ logger.info(f"📊 Equity Value: {equity_value}")
 share_value: float = equity_value / (shares_out_arr[-1])
 logger.info(f"📊 Share Value: {share_value}")
 
+# sys.exit()  # STOP <37>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+
+
 # price check
 price: float = yahoo_finance_price_fetcher_v2(symbol=TICKER_SYMBOL)
 logger.info(f"📊 Price: ${price}")
+
+
+# STEP 12: Decision
 
 # decision:
 is_sell: bool = share_value < (1 - BUY_SELL_THRESHOLD) * price
@@ -988,4 +1064,4 @@ if is_buy:
 
 logger.info(f"[DECISION] HOLD {TICKER_SYMBOL}")
 
-# sys.exit()  # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
+# sys.exit()  # STOP <38>   # TEMPORARY EXIT TO AVOID RUNNING THE REST OF THE CODE DURING TESTING
